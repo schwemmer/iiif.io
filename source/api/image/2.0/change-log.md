@@ -7,10 +7,10 @@ tags: [specifications, image-api, change-log]
 major: 2
 minor: 0
 # no patch
-pre: draft
+pre: draft2
 ---
 
-This document is a companion to the [IIIF Image API Specification, Version 2.0][api]. It describes the significant changes to the API since [Version 1.1][api-11]. The changes are broken into two groups: [Breaking Changes][breaking-changes], i.e. those that are not backwards compatible from either a client or server perspective (or both); and [Other Changes][other-changes], i.e. those that are backwards compatible. The latter group consists mostly of new features.
+This document is a companion to the [IIIF Image API Specification, Version 2.0][api]. It describes the significant changes to the API since [Version 1.1][api-11]. The changes are broken into three groups: [Breaking Changes][breaking-changes], i.e. those that are not backwards compatible from either a client or server perspective (or both) and mostly consists of new features; [Other Changes][other-changes], i.e. those that are backwards compatible; and [Deferred Changes][deferred-changes], i.e. those that will be made in a future iteration of the Image API.
 
 In addition to changes in the API, the specification documents have been changed as follows:
 
@@ -39,6 +39,11 @@ There was also confusion among users as to the meaning of `native`. The API does
 This is a response to several requests for the ability to describe the capabilities of a server or a particular image with finer granularity than that of the compliance levels. For example, a server may be completely compliant with level 1, but also support the `!w,h` syntax for specifying the size, which is a level 2 feature. This capability can be exposed using the `supports` property with the `profile` property.
 
 The `qualities` and `formats` properties have been moved into the object referenced in `profile`.
+
+### Added `tiles` property to Image Information document
+
+A `tiles` property was added to the top level of the JSON in the Image Information document response.  The rationale was to promote consistency between information about tiles (regions of an image at different sizes) and the different sizes available (see `sizes` below), to clarify that the `scale_factors` are related to tiles rather than the complete image, and to allow different tile sizes at different scale factors.  The property is a list of JSON objects, with `height`, `width` and `scale_factors` properties.  This change therefore renames `tile_height` and `tile_width`, and moves them along with `scale_factors` into the new structure.  The `height` property is now optional, defaulting to the same as `width`.  This makes the default of square tiles easier to record.
+
 
 ### Required <abbr title="Cross-Origin Resource Sharing">CORS</abbr> for level 1 Compliance
 
@@ -90,9 +95,17 @@ Rotation in multiples of 90 was previously a level 1 requirement. As this can be
 
 The rotation value may now be preceded by an exclamation mark to specify mirroring about the vertical axis before rotation. The motivating use cases are display of negatives, reflection to support a carousel display, and support for reading bleed through text. 
 
+### Added `services` property to Image Information document
+
+In order to provide the same extension point as is in the [Presentation API][prezi-api], the `services` property was added to info.json.  The predominant use case is recording pixels per inch, via the same mechanism as providing the size of the physical object in the Presentation API.  The [Services Annex][services] specifies which services can be used with which APIs.
+
+
 ### Added `sizes` property to Image Information document
 
-Servers that do not support arbitrary size parameters for image requests may still wish make multiple sizes of an image available. The sizes that are available may be listed using the `w,h` syntax in the `sizes` property. Even when a server does support arbitrary resizing, it may be useful to report pre-cached or otherwise recommended sizes of an image, e.g. thumbnails.
+Servers that do not support arbitrary size parameters for image requests may still wish make multiple sizes of an image available. The sizes that are available may be listed using an array of JSON objects in the `sizes` property of the top level of the Image Information response.  The object has `height`, `width` and `viewing_hint` properties.  The `viewing_hint` property was added from the Presentation API to allow the server to provide a hint to the client about the intended use of the given image size, such as 'thumbnail' or 'icon'.
+
+Even when a server does support arbitrary resizing, it may be useful to report pre-cached or otherwise recommended sizes of an image.
+
 
 ### Published JSON-LD Context
 
@@ -102,6 +115,19 @@ The [context document][context] for the `info.json` document was not published f
 
 As transition to JSON-LD (since it is not fully supported by browsers), clients that favor the "application/ld+json" media type in the accept header of their request may receive this as the Content-Type of the response. Also note that it is recommended that the server include the context URI in a Link header of the response if the request was for for "application/json". See [Section 5][info-request] and the documents to which it links for further details.
 
+### Background Color for non-90 degree Rotations
+
+Clarified that clients should request image formats capable of transparent backgrounds when rotation is not a multiple of 90 degrees, and that servers should return transparent backgrounds for such images.  For formats that do not support transparent backgrounds, no requirements are specified.
+
+
+## Deferred Changes
+
+### Add Rights Information
+
+A proposal was made to add rights level information from the [Presentation API][prezi-api] to the Image Information response for images to avoid requiring support for both APIs just to give a license or attribution statement for the image.  This change was deferred until the next version of the API to coincide with the introduction of Authentication and Authorization information, and to allow extra time to gather use cases and requirements.
+
+
+
 [api-11]: /api/image/1.1/ "Image API 1.1"
 [api-compliance]: /api/image/2.0/#compliance-levels "Image API 6. Compliance Levels"
 [api]: /api/image/2.0/ "Image API 2.0"
@@ -110,7 +136,6 @@ As transition to JSON-LD (since it is not fully supported by browsers), clients 
 [info-request]: /api/image/2.0/#information-request "Image API Section 5. Information Request"
 [compliance-doc]: /api/image/2.0/compliance.html "Image API 2.0 Compliance Document"
 [context]: /api/image/2/context.json  "Image API 2.0 JSON-LD Context"
-[extensions]: /api/image/2.0/#extensions "Image API 4.7. Canonical URI Syntax"
 [http-features]: /api/image/2.0/compliance.html#http-features "Image API Compliance: HTTP Features"
 [imagemagick-output]: http://www.imagemagick.org/script/command-line-processing.php#output "ImageMagick: Command-line Processing: Output Filename"
 [kdu-usage]: http://www.kakadusoftware.com/documents/Usage_Examples.txt "Usage Examples for the Demonstration Applications Supplied with Kakadu V7.0"
@@ -119,5 +144,7 @@ As transition to JSON-LD (since it is not fully supported by browsers), clients 
 [rfc-2119]: http://tools.ietf.org/html/rfc2119 "Key words for use in RFCs to Indicate Requirement Levels"
 [semver]: http://semver.org/ "Semantic Versioning Specification"
 [versioning]: /api/image/2.0/#b-versioning "Image API Appendix B: Versioning"
+[prezi-api]: /api/presentation/2.0/
+[services]: /api/annex/services/
 
 {% include acronyms.md %}

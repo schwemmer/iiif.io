@@ -1,13 +1,13 @@
 ---
 title: "Image API 2.0 - DRAFT"
-title_override: "IIIF Image API 2.0 - DRAFT"
+title_override: "IIIF Image API 2.0 - DRAFT 2"
 id: image-api
 layout: spec
 tags: [specifications, image-api]
 major: 2
 minor: 0
 patch: 0
-pre: draft1
+pre: draft2
 ---
 
 ## Status of this Document
@@ -450,29 +450,49 @@ Access-Control-Allow-Origin: *
 
 ### 5.1. Image Information
 
-The JSON in the response will include the following properties:
+The JSON at the top level of the response will include the following properties:
 
 | Property   | Required? | Description |
 | ---------- | --------- | ----------- |
 | `@context` | Required | The context document that describes the semantics of the terms used in the document. This must be the URI: `http://iiif.io/api/image/{{ page.major }}.{{ page.minor }}/context.json` for version {{ page.major }}.{{ page.minor }} of the IIIF Image API. This document allows the response to be interpreted as RDF, using the [JSON-LD][json-ld-org] serialization. |
 | `@id` | Required | The Base URI of the image (as defined in [URI Syntax][uri-syntax], including scheme, server, prefix and identifier without a trailing slash. |
 | `protocol` | Required | The URI `http://iiif.io/api/image` which can be used to determine that the document describes an image service which is a version of the IIIF Image API. |
-| `width` | Required | The width in pixels of the full image, given as an integer. |
-| `height` | Required | The height in pixels of the full image, given as an integer. |
+| `width` | Required | The width in pixels of the full image content, given as an integer. |
+| `height` | Required | The height in pixels of the full image content, given as an integer. |
 | `profile` | Required | An array of profiles, indicated by either a URI or an object describing the features supported.  The first entry in the array _MUST_ be a compliance level URI, as defined below. |
-| `sizes` | Optional | A set of dimensions that the server has available, expressed in the "w,h" syntax. This may be used to let a client know the sizes that are available when the server does not support requests for arbitrary sizes, or simply as a hint that requesting an image of this size may result in a faster response. |
-| `scale_factors` | Optional | Some image servers support the creation of multiple resolution levels for a single image in order to optimize the efficiency in delivering images of different sizes. The `scale_factors` property expresses a set of resolution scaling factors. For example, a scale factor of 4 indicates that the service can efficiently deliver images at 1/4 or 25% of the height and width of the full image. |
-| `tile_width` | Optional | Some image servers efficiently support delivery of predefined tiles enabling easy assembly of portions of the image. It is assumed that the same tile sizes are used for all scale factors supported. The `tile_width` property expresses the width of the predefined tiles. |
-| `tile_height` | Optional | The `tile_height` property expresses the height of the predefined tiles. See description of `tile_width` for more information. |
+| `sizes` | Optional | A set of descriptions of the parameters to use to request complete images at different sizes that the server has available. This may be used to let a client know the sizes that are available when the server does not support requests for arbitrary sizes, or simply as a hint that requesting an image of this size may result in a faster response. |
+| `tiles` | Optional | A set of descriptions of the parameters to use to request regions of the image (tiles) that are efficient for the server to deliver. Each description gives a height and width plus a set of scale factors at which tiles of those dimensions are available. |
+| `service` | Optional | The `service` property provides a hook for additional information to be included in the image description, for example the physical size of the object depicted.  Please see the [Service Profiles][service-profiles] annex for more information. |
 {: .image-api-table}
 
-Image profiles have the following properties:
+The objects in the `sizes` list have the properties in the following table.  Images requested using these sizes _SHOULD_ have a region parameter of "full" and rotation of "0". The full URL would be: `{base_url}/{identifier}/full/{width},{height}/0/default.jpg`
 
-| Property  | Required? | Description |
-| --------- | --------- | ----------- |
-| `formats` | Optional | The set of image format parameter values available for the image, beyond those declared in the compliance level document. |
-| `qualities` | Optional | The set of image quality parameter values available for the image, beyond those declared in the compliance level document. |
-| `supports` | Optional | The set of additional features supported beyond those declared in the compliance level document. |
+| Property   | Required? | Description |
+| ---------- | --------- | ----------- |
+| `width` | Required | The width of the image to be requested. |
+| `height` | Required | The height of the image to be requested. |
+| `viewing_hint` | Optional | A string giving a hint to the intended use of the size.  It may have any value, but the following are recommended: `icon`, `thumbnail`, `small`, `medium`, `large`, `xlarge` |
+{: .image-api-table}
+
+The objects in the `tiles` list have the properties in the following table.  The `width` and `height` should be used to fill the region parameter and the `scale_factors` to complete the size parameter of the image URL. This is described in detail in the [Implementation Notes][a-implementation-notes].
+
+| Property   | Required? | Description |
+| ---------- | --------- | ----------- |
+| `scale_factors` | Required | The set of resolution scaling factors for the image's predefined tiles, expressed as an integer by which to divide the full size of the image. For example, a scale factor of 4 indicates that the service can efficiently deliver images at 1/4 or 25% of the height and width of the full image. |
+| `width` | Required | The width of the predefined tiles to be requested. |
+| `height` | Optional | The height of the predefined tiles to be requested.  If it is not specified in the JSON, then it defaults to the same as `width`, resulting in square tiles. |
+{: .image-api-table}
+
+The objects in the `profiles` list have the properties in the following table.  The `@context`, `@id` and `@type` properties are _REQUIRED_ when the profile is dereferenced from a URI, but _SHOULD NOT_ be included in the Image Information response.
+
+| Property    | Required? | Description |
+| ----------- | --------- | ----------- |
+| `@context`  | Optional  | The string "http://iiif.io/api/image/{{ site.image_api.latest.major }}/context.json". This should be included only if the profile's URI is dereferenced. |
+| `@id`       | Optional  | The URI of the profile. |
+| `@type`     | Optional  | The string "iiif:ImageProfile" |
+| `formats`   | Optional  | The set of image format parameter values available for the image. |
+| `qualities` | Optional  | The set of image quality parameter values available for the image. |
+| `supports`  | Optional  | The set of additional features supported beyond those declared in the compliance level document |
 {: .image-api-table}
 
 The set of features that may be specified in the `supports` property of an Image profile are:
@@ -483,6 +503,7 @@ The set of features that may be specified in the `supports` property of an Image
 | `canonical_link_header` | The canonical image URI HTTP link header is provided on image responses |
 | `cors` |  The CORS HTTP header is provided on all responses  |
 | `jsonld_media_type` | The JSON-LD media type is provided when JSON-LD is requested|
+| `mirroring` | The image may be rotated around the vertical axis, resulting in a left-to-right mirroring of the content |
 | `profile_link_header` | The profile link header is provided on image responses |
 | `region_by_pct` |  Regions of images may be requested by percentage  |
 | `region_by_px` |   Regions of images may be requested by pixel dimensions  |
@@ -496,11 +517,13 @@ The set of features that may be specified in the `supports` property of an Image
 | `size_by_wh` |   Size of images may be requested in the form "w,h"  |
 {: .image-api-table}
 
-The set of features, formats and qualities supported is the union of those declared in all of the external profile documents and any embedded profile objects.  If a property is not present in either the profile document or the `supports` property of an embedded profile, then a client _MUST_ assume that the feature is not supported.
+The set of features, formats and qualities supported is the union of those declared in all of the external profile documents and any embedded profile objects.  If a feature is not present in either the profile document or the `supports` property of an embedded profile, then a client _MUST_ assume that the feature is not supported.
 
 If any of `formats`, `qualities`, or `supports` would have an empty list as its value, then the property _SHOULD_ be omitted from the response instead. 
 
-The JSON response _MUST_ conform to the structure shown in the following example. The order of the keys in the response _SHOULD_ follow the order in the following example.
+URIs _MAY_ be added to the supports list of a profile to cover features not defined in this specification. Clients _MUST_ ignore URIs that are not understood.
+
+The JSON response is structured as shown in the following example. The order of the keys in the response _SHOULD_ follow the order in the example.
 
 {% highlight json %}
 {
@@ -509,20 +532,30 @@ The JSON response _MUST_ conform to the structure shown in the following example
   "protocol" : "http://iiif.io/api/image",
   "width" : 6000,
   "height" : 4000,
-  "scale_factors" : [ 1, 2, 4 ],
-  "sizes" : [ "150,100", "360,240", "3600,2400" ],
-  "tile_width" : 1024,
-  "tile_height" : 1024,
+  "sizes" : [
+    {"width" : 150, "height" : 100, "viewing_hint" : "thumbnail"},
+    {"width" : 600, "height" : 400, "viewing_hint" : "small"},
+    {"width" : 3000, "height": 2000, "viewing_hint" : "large"}
+  ],
+  "tiles": [
+    {"width" : 512, "scale_factors" : [1,2,4,8,16]}
+  ],
   "profile" : [
     "http://iiif.io/api/image/{{ page.major }}/level2.json",
     {
       "formats" : [ "gif", "pdf" ],
       "qualities" : [ "color", "gray" ],
       "supports" : [
-          "canonical_link_header", "rotation_arbitrary"
+          "canonical_link_header", "rotation_arbitrary", "http://example.com/feature/"
       ]
     }
-  ]
+  ],
+  "service" : {
+    "@context": "http://iiif.io/api/annex/service/physdim/1.0/context.json",
+    "profile": "http://iiif.io/api/annex/service/physdim",
+    "physical_scale": 0.0025,
+    "physical_units": "in"
+  }
 }
 {% endhighlight %}
 
@@ -612,7 +645,36 @@ Early sanity checking of URIs (lengths, trailing GET, invalid characters, out-of
   * This specification makes no assertion about the rights status of requested images or any other descriptive metadata, whether or not authentication has been accomplished. Please see the [IIIF Presentation API][prezi-api] for rights and other information.
   * This API does not specify how image servers fulfill requests, what quality the returned images will have for different parameters, or how parameters may affect performance.
   * Image identifiers that include the slash (/ %2F) or backslash (\ %5C) characters may cause problems with some HTTP servers. Apache servers from version 2.2.18 support the `AllowEncodedSlashes NoDecode` [configuration directive][apache-aesnd] which will correctly pass these characters to client applications without rejecting or decoding them. Servers using older versions of Apache and local identifiers which include these characters will need to use a workaround such as internally translating or escaping slash and backslash to safe value (perhaps by double URI-encoding them).
-  * As described in [Rotation][rotation], in order to retain the size of the requested image contents, rotation will change the width and height dimensions of the returned image file. A formula for calculating the dimensions of the returned image file for a given rotation can be found here.
+  * When requesting image tiles, the [Region][region] and [Size][size] parameters must be calculated to take account of partial tiles along the right and lower edges for a full imagine that is not an exact multiple of the scaled tile size. The algorithm below is shown as Python code and assumes integer inputs and integer arithmetic throughout (ie. remainder discarded on division). Inputs are: size of full image content `(width,height)`, scale factor `s`, tile size `(tw,th)`, and tile coordinate `(n,m)` counting from `(0,0)` in the upper-left corner. Note that the rounding method is implementation dependent.
+
+{% highlight python %}
+    # Calculate region parameters /xr,yr,wr,hr/
+    xr = n * tw * s 
+    yr = m * th * s
+    wr = tw * s
+    if (xr + wr > width):
+        wr = width - xr
+    hr = th * s
+    if (yr + hr > height):
+        hr = height - yr
+    # Calculate size parameters /ws,hs/
+    ws = tw
+    if (xr + tw*s > width):
+        ws = (width - xr + s - 1) / s  # +s-1 in numerator to round up
+    hs = th
+    if (yr + th*s > height):
+        hs = (height - yr + s - 1) / s
+{% endhighlight %}
+{: .urltemplate}
+
+  * As described in [Rotation][rotation], in order to retain the size of the requested image contents, rotation will change the width and height dimensions of the image returned. A formula for calculating the dimensions of the image returned for a given starting size and rotation is given below. Note that the rounding method is implementation dependent and that some languages require conversion of the angle from degrees to radians.
+
+{% highlight python %}
+    # (w,h) are size parameters, n is rotation angle
+    w_returned = abs(w*cos(n)) + abs(h*sin(n))
+    h_returned = abs(h*cos(n)) + abs(w*sin(n))
+{% endhighlight %}
+{: .urltemplate}
 
 ### B. Versioning
 
@@ -628,7 +690,8 @@ Many thanks to  Ben Albritton, Matthieu Bonicel, Anatol Broder, Kevin Clarke, To
 
 | Date       | Description |
 | ---------- | ----------- |
-| 2014-05-XX | Version 2.0 (Voodoo Bunny) RFC [View change log][change-log] |
+| 2014-07-01 | Version 2.0-draft2 (Voodoo Bunny) RFC [View change log][change-log] |
+| 2014-06-01 | Version 2.0-draft (Voodoo Bunny) RFC |
 | 2013-09-17 | Version 1.1 released. |
 | 2013-09-04 | Added @context to Image Information Request table in section 5. |
 | 2013-06-26 | Changed quality parameter definitions in section 4.4. |
@@ -661,6 +724,7 @@ Many thanks to  Ben Albritton, Matthieu Bonicel, Anatol Broder, Kevin Clarke, To
 [versioning]: /api/annex/notes/semver.html "Versioning of APIs"
 [prezi-api]: /api/presentation/{{ site.presentation_api.latest.major }}.{{ site.presentation_api.latest.minor }}/ "Presentation API"
 [apache-aesnd]: http://httpd.apache.org/docs/2.2/mod/core.html#allowencodedslashes "Allow Encoded Slashes directive"
+[service-profiles]: /api/annex/services/ "Services Annex Document"
 
 [audience-and-scope]: #audience-and-scope "1. Audience and Scope"
 [uri-syntax]: #uri-syntax "2. URI Syntax"
