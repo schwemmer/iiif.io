@@ -92,14 +92,27 @@ The service _MAY_ have additional information embedded from the Image Informatio
   "service": {
     "@context" : "http://iiif.io/api/image/{{ site.image_api.latest.major }}/context.json",
     "@id" : "http://www.example.org/image-service/abcd1234",
-    "profile": "http://iiif.io/api/image/1/level2.json",
     "protocol": "http://iiif.io/api/image",
     "width" : 6000,
     "height" : 4000,
-    "scale_factors" : [ 1, 2, 4 ],
-    "sizes" : [ "150,100", "360,240", "3600,2400" ],
-    "tile_width" : 1024,
-    "tile_height" : 1024
+    "sizes" : [
+      {"width" : 150, "height" : 100, "viewing_hint" : "thumbnail"},
+      {"width" : 600, "height" : 400, "viewing_hint" : "small"},
+      {"width" : 3000, "height": 2000, "viewing_hint" : "large"}
+    ],
+    "tiles": [
+      {"width" : 512, "scale_factors" : [1,2,4,8,16]}
+    ],
+    "profile" : [
+      "http://iiif.io/api/image/{{ page.major }}/level2.json",
+      {
+        "formats" : [ "gif", "pdf" ],
+        "qualities" : [ "color", "gray" ],
+        "supports" : [
+            "canonical_link_header", "rotation_arbitrary", "http://example.com/feature/"
+        ]
+      }
+    ],
   }
 }
 {% endhighlight %}
@@ -146,9 +159,9 @@ _Added: 2014-05-20_, _Latest Revision: 2014-06-08_
 
 For digitized objects, it is often useful to know the physical dimensions of the object.  When available, they allow a client to present a ruler, or other rendition of physical scale, to the user.  However, implementers are warned that while this information may be available, frequently:
 
-  * It is not available at all
-  * It is unreliable when it is recorded
-  * It is different for every view of an object
+  * It is not available at all.
+  * It is unreliable when it is recorded.
+  * It is different for every view of an object.
   * When used with the Presentation API, the Canvas dimensions don't accurately reflect only the physical object, but are derived from an image that includes a ruler, color bar, or the scanning bed.
 
 As the Presentation API already includes an aspect ratio for the Canvas, and the Image API includes the height and width of the Image, the physical dimensions service need only report two additional pieces of information: the scale factor to multiply the dimensions by to calculate the physical dimensions, and the units for those generated physical dimensions.  It is _RECOMMENDED_ that the information always be embedded rather than requiring the client to retrieve it with an additional HTTP request, however some implementers _MAY WISH TO_ keep the information separate.
@@ -159,11 +172,11 @@ The physical dimensions description includes the following properties:
 
 | Property         | Required? | Description |
 | ---------------- | --------- | ----------- |
-| `@context`       | Required  | The string "http://iiif.io/api/annex/service/physdim/1/context.json" |
-| `@id`            | Optional  | A URI that will return the information, perhaps generated dynamically from the image |
-| `profile`        | Required  | The string "http://iiif.io/api/annex/service/physdim" |
+| `@context`       | Required  | The string "http://iiif.io/api/annex/service/physdim/1/context.json". |
+| `@id`            | Optional  | A URI that will return the information, perhaps generated dynamically from the image. |
+| `profile`        | Required  | The string "http://iiif.io/api/annex/service/physdim". |
 | `physical_scale` | Required  | The floating point ratio by which the digital resource's height and width are multipled in order to determine the physical object's height and width.  |
-| `physical_units` | Required  | The physical units for the generated height and width.  Possible values are: "mm", "cm", in" |
+| `physical_units` | Required  | The physical units for the generated height and width.  Possible values are: "mm", "cm", in". |
 
 {: .image-api-table}
 

@@ -109,7 +109,7 @@ label
     * A manifest _MUST_ have a label, and it _SHOULD_ be the name of the object or title of the intellectual work that it embodies.
     * A sequence  _MAY_ have a label, and if there are multiple sequences in a single manifest then they _MUST_ have labels. The label _SHOULD_ briefly convey the nature of sequence, such as "Current Page Order".
     * A canvas _MUST_ have a label, and it _SHOULD_ be the page or view label such as "p. 1", "front", or "north view".
-    * A content resource _MAY_ have a label, and if there is a choice of content resource for the same canvas, then they _MUST_ have labels. The label _SHOULD_ be a brief description of the resource, such as "black and white" versus "color photograph"
+    * A content resource _MAY_ have a label, and if there is a choice of content resource for the same canvas, then they _MUST_ have labels. The label _SHOULD_ be a brief description of the resource, such as "black and white" versus "color photograph".
 
 metadata
 :   A list of short descriptive entries, given as pairs of human readable label and value to be displayed to the user. The value _SHOULD_ be either simple HTML, including links and text markup, or plain text, and the label _SHOULD_ be plain text. There are no semantics conveyed by this information, and clients _SHOULD NOT_ use it for discovery or other purposes. This list of descriptive pairs _SHOULD_ be able to be displayed in a tabular form in the user interface. Clients _SHOULD_ have a way to display the information about manifests and canvases, and _MAY_ have a way to view the information about other resources. The client _SHOULD_ display the pairs in the order provided by the description. A pair might be used to convey the author of the work, information about its creation, a brief physical description, or ownership information, amongst other use cases. The client is not expected to take any action on this information beyond displaying the label and value. An example pair of label and value might be a label of "Author" and a value of "Jehan Froissart".
@@ -148,21 +148,21 @@ attribution
 
     Usage:
     {: .usage}
-    * Any resource _MAY_ have an attribution label
+    * Any resource _MAY_ have an attribution label.
 
 logo
 :   A small image that represents an individual or organization associated with the object.  This could be the logo of the owning or hosting institution.  It is _RECOMMENDED_ that a [IIIF Image API][image-api] service be available for this image for manipulations such as resizing.
 
     Usage:
     {: .usage}
-    * Any resource _MAY_ have a logo associated with it
+    * Any resource _MAY_ have a logo associated with it.
 
 license
 :   A link to a resource that describes the license or rights statement under which the resource is being used. The rationale for this being a URI and not a human readable label is that typically there is one license for many resources, and the text is too long to be displayed to the user along with the object. If displaying the text is a requirement, then it is _RECOMMENDED_ to include the information using the `attribution` property instead.
 
     Usage:
     {: .usage}
-    * Any resource _MAY_ have a license associated with it
+    * Any resource _MAY_ have a license associated with it.
 
 ####  4.3. Technical Properties
 
@@ -205,15 +205,15 @@ width
 :   The width of a canvas or image resource. For images, this is in pixels. No particular units are required for canvases.
     Usage:
     {: .usage}
-    * As for height above
+    * As for height above.
 
 viewing_direction
 :   The direction that canvases should be presented in a viewer for the object. Possible values are:
 
-    * "left-to-right": The object is read from left to right, and is the default if not specified
-    * "right-to-left": The object is read from right to left
-    * "top-to-bottom": The object is read from the top to the bottom
-    * "bottom-to-top": The object is read from the bottom to the top
+    * "left-to-right": The object is read from left to right, and is the default if not specified.
+    * "right-to-left": The object is read from right to left.
+    * "top-to-bottom": The object is read from the top to the bottom.
+    * "bottom-to-top": The object is read from the bottom to the top.
 
     Usage:
     {: .usage}
@@ -308,9 +308,21 @@ The individual resources _MAY_ have URIs below this top-level pattern by appendi
 
 The format for all responses is JSON, and the sections below describe the structure to be returned in more detail. The primary response is when the manifest is requested and, for optimization reasons, this _MUST_ return the manifest information with the default sequence, canvases and associations for image content resources embedded within it. Additional sequences and associations _MAY_ be available via additional calls, and if so, _MUST_ be referenced in the manifest.
 
-The content-type of the response _MUST_ be either `application/json` (regular JSON), or `application/ld+json` (JSON-LD). If the client explicitly wants the JSON-LD content-type, then it _MUST_ specify this in an Accept header, otherwise the server _MUST_ return the regular JSON content-type.
+The content-type of the response _MUST_ be either `application/json` (regular JSON),
 
-If the regular JSON content-type is returned, then it is _RECOMMENDED_ that the server provide a link header to the context document. The syntax for the link header is below, and further described in [section 6.8 of the JSON-LD specification][json-ld-68]. The context _MUST NOT_ be given in the link header if the client requests `application/ld+json`.
+```
+Content-Type: application/json
+```
+{: .urltemplate}
+
+or "application/ld+json" (JSON-LD). 
+
+```
+Content-Type: application/ld+json
+```
+{: .urltemplate}
+
+If the client explicitly wants the JSON-LD content-type, then it _MUST_ specify this in an Accept header, otherwise the server _MUST_ return the regular JSON content-type. If the regular JSON content-type is returned, then it is _RECOMMENDED_ that the server provide a link header to the context document. The syntax for the link header is below, and further described in [section 6.8 of the JSON-LD specification][json-ld-68]. The context _MUST NOT_ be given in the link header if the client requests `application/ld+json`.
 
 ```
 Content-Type: application/json
@@ -327,15 +339,9 @@ Access-Control-Allow-Origin: *
 ```
 {: .urltemplate}
 
-In the Apache web server this may be enabled with the following configuration snippet:
-
-```
-LoadModule headers_module modules/mod_headers.so
-Header set Access-Control-Allow-Origin "*"
-```
-{: .urltemplate}
-
 Responses _SHOULD_ be compressed by the server as there are significant performance gains to be made for very repetitive data structures.
+
+Recipes for enabling CORS and the conditional Content-type header are provided in the [Apache HTTP Server Implementation Notes][apache-notes].
 
 ####  5.2.2. Content Details
 
@@ -368,15 +374,15 @@ Language _MAY_ be associated with strings using the following pattern of `@value
 
 Note that [RFC 5646][rfc5646] allows the script of the text to be included after a hyphen, such as `ar-latn`, and clients _SHOULD_ be aware of this possibility. This allows for full internationalization of the user interface components described in the response, as the labels as well as values may be translated in this manner; examples are given below.
 
-Minimal HTML markup _MAY_ be included in the `description`, `attribution` and 'metadata' properties using the pattern of `@value` with an `@type` property of `rdf:XMLLiteral`. This is included to allow manifest creators to add links and simple formatting instructions to blocks of plain text. The content _MUST_ be well-formed XML and therefore must be wrapped in an element such as `p` or `span`.  There _MUST NOT_ be whitespace on either side of the HTML string, and thus the first character in the string _MUST_ be a '<' character and the last character _MUST_ be '>'.
+Minimal HTML markup _MAY_ be included in the `description`, `attribution` and `metadata` properties using the pattern of `@value` with an `@type` property of `rdf:XMLLiteral`. This is included to allow manifest creators to add links and simple formatting instructions to blocks of plain text. The content _MUST_ be well-formed XML and therefore must be wrapped in an element such as `p` or `span`.  There _MUST NOT_ be whitespace on either side of the HTML string, and thus the first character in the string _MUST_ be a '<' character and the last character _MUST_ be '>'.
 
 In order to avoid HTML or script injection attacks, clients _MUST_ remove:
 
-  * Tags such as `script`, `style`, `object`, `form`, `input` and similar
-  * All attributes other than `href` on the `a` tag, `src` and `alt` on the `img` tag
-  * CData sections
-  * XML Comments
-  * Processing instructions
+  * Tags such as `script`, `style`, `object`, `form`, `input` and similar.
+  * All attributes other than `href` on the `a` tag, `src` and `alt` on the `img` tag.
+  * CData sections.
+  * XML Comments.
+  * Processing instructions.
 
 Clients _SHOULD_ allow only `a`, `b`, `br`, `i`, `img`, `p`, and `span` tags. Clients _MAY_ choose to remove any and all tags, therefore it _SHOULD NOT_ be assumed that the formating will always be rendered.
 
@@ -399,9 +405,9 @@ The top level resource in the response _MUST_ have the `@context` property, and 
 Any additional fields beyond those defined in this specification _SHOULD_ be mapped to RDF predicates using further context documents. In this case, the enclosing object _MUST_ have its own `@context` property, and it _SHOULD_ be the first key/value pair. This is _REQUIRED_ for `service` links that embed any information beyond a `profile`.  These contexts _SHOULD NOT_ redefine `profile`.
 
 Clients _SHOULD_ be aware that some implementations will add an `@graph` property at the top level, which contains the object. This is a side effect of JSON-LD serialization, and servers _SHOULD_ remove it before sending to the client. The client can use the [JSON-LD compaction algorithm][json-ld-compact] to remove it, if present.
-<!--
-Using JSON-LD Framing with the [supplied frames][XXX] will avoid the generation of the `@graph` pattern.
--->
+
+Using compaction and the JSON-LD Framing algorithm with the [supplied frames][annex-frames] will generate the correct structure.
+
 
 ##  6. Primary Resource Types
 
@@ -1052,10 +1058,10 @@ Manifests or collections _MAY_ appear within more than one collection. For examp
 
 The intended usage of collections is to allow clients to:
 
-  * Load a pre-defined set of manifests at initialization time
-  * Receive a set of manifests, such as search results, for rendering
-  * Visualize lists or hierarchies of related manifests
-  * Provide navigation through a list or hierarchy of available manifests
+  * Load a pre-defined set of manifests at initialization time.
+  * Receive a set of manifests, such as search results, for rendering.
+  * Visualize lists or hierarchies of related manifests.
+  * Provide navigation through a list or hierarchy of available manifests.
 
 Note that the recommended URI pattern prevents the existence of a manifest or object with the identifier "collection".
 
@@ -1194,7 +1200,7 @@ URL: _http://www.example.org/iiif/book1/manifest.json_
             "other_content": [
               {
                 "@id":"http://www.example.org/iiif/book1/list/p1.json",
-                "@type":"sc:"
+                "@type":"sc:AnnotationList"
               }
             ]
         },
@@ -1218,11 +1224,9 @@ URL: _http://www.example.org/iiif/book1/manifest.json_
                         "@context": "http://iiif.io/api/image/{{ site.image_api.latest.major }}/context.json",
                         "@id": "http://www.example.org/images/book1-page2",
                         "profile":"http://iiif.io/api/image/{{ site.image_api.latest.major }}/level1.json",
-                        "scale_factors": [1, 2, 4],
                         "height":8000,
                         "width":6000,
-                        "tile_width":1024,
-                        "tile_height":1024
+                        "tiles" : [{"width": 512, "scale_factors": [1,2,4,8,16]}]
                     }
                 },
                 "on":"http://www.example.org/iiif/book1/canvas/p2.json"
@@ -1231,7 +1235,7 @@ URL: _http://www.example.org/iiif/book1/manifest.json_
             "other_content": [
               {
                 "@id":"http://www.example.org/iiif/book1/list/p2.json",
-                "@type":"sc:"
+                "@type":"sc:AnnotationList"
               }
             ]
           },
@@ -1263,7 +1267,7 @@ URL: _http://www.example.org/iiif/book1/manifest.json_
             "other_content": [
               {
                 "@id":"http://www.example.org/iiif/book1/list/p3.json",
-                "@type":"sc:"
+                "@type":"sc:AnnotationList"
               }
             ]
           }
@@ -1380,7 +1384,7 @@ Many thanks to Matthieu Bonicel, Tom Cramer, Ian Davis, Markus Enders, Renhart G
 [annex]: /api/annex/services/ "Services Annex Document"
 [change-log]: /api/presentation/2.0/change-log.html "Presentation API 2.0 Change Log"
 [iiif-community]: /community.html "IIIF Community"
-
+[apache-notes]: /api/annex/notes/apache.html "Apache HTTP Server Implementation Notes"
 [openanno]: http://www.openannotation.org/spec/core/ "Open Annotation"
 [openannotypes]: http://www.openannotation.org/spec/core/core.html#BodyTargetType
 [openannomulti]: http://www.openannotation.org/spec/core/multiplicity.html#Choice
@@ -1397,6 +1401,7 @@ Many thanks to Matthieu Bonicel, Tom Cramer, Ian Davis, Markus Enders, Renhart G
 [json-ld-compact]: http://www.w3.org/TR/json-ld-api/#compaction-algorithms "JSON-LD Compaction Algorithms"
 [versioning]: /api/annex/notes/semver.html "Versioning of APIs"
 [use-case-doc]: /api/presentation/usecases.html "Presentation API Use Cases"
+[annex-frames]: /api/annex/notes/frames.html "JSON-LD Frames Implementation Notes"
 
 [icon-req]: /img/metadata-api/required.png "Required"
 [icon-recc]: /img/metadata-api/recommended.png "Recommended"
