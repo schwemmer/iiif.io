@@ -6,7 +6,7 @@ tags: [compliance, image-api]
 major: 2
 minor: 0
 patch: 0
-pre: draft1
+pre: final-draft
 ---
 
 ## Status of this Document
@@ -50,6 +50,7 @@ In the tables below "![required][icon-req]" indicates that support is _REQUIRED_
 | Syntax      | Feature Name        | Level 0 | Level 1 | Level 2  |
 |:------------|:--------------------|:-------:|:-------:|:--------:|
 | `full`      |                     | ![required][icon-req]      | ![required][icon-req]      | ![required][icon-req]       |
+| w,h       | `size_by_wh_listed` | ![required][icon-req]      | ![required][icon-req]      | ![required][icon-req]       |
 | w,          | `size_by_w`         | ![optional][icon-opt]      | ![required][icon-req]      | ![required][icon-req]       |
 | ,h          | `size_by_h`         | ![optional][icon-opt]      | ![required][icon-req]      | ![required][icon-req]       |
 | pct:x       | `size_by_pct`       | ![optional][icon-opt]      | ![required][icon-req]      | ![required][icon-req]       |
@@ -88,7 +89,9 @@ In the tables below "![required][icon-req]" indicates that support is _REQUIRED_
 | `gif`       | ![optional][icon-opt]      | ![optional][icon-opt]      | ![optional][icon-opt]       |
 | `pdf`       | ![optional][icon-opt]      | ![optional][icon-opt]      | ![optional][icon-opt]       |
 | `jp2`       | ![optional][icon-opt]      | ![optional][icon-opt]      | ![optional][icon-opt]       |
+| `webp`      | ![optional][icon-opt]      | ![optional][icon-opt]      | ![optional][icon-opt]       |
 {: .image-api-table}
+
 
 ## HTTP Features
 

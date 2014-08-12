@@ -1,13 +1,13 @@
 ---
 title: "Image API 2.0 - DRAFT"
-title_override: "IIIF Image API 2.0 - DRAFT 2"
+title_override: "IIIF Image API 2.0 - Final Draft"
 id: image-api
 layout: spec
 tags: [specifications, image-api]
 major: 2
 minor: 0
 patch: 0
-pre: draft2
+pre: final-draft
 ---
 
 ## Status of this Document
@@ -362,6 +362,7 @@ The format of the returned image is expressed as an extension at the end of the 
 | `gif`     | image/gif |
 | `jp2`     | image/jp2 |
 | `pdf`     | application/pdf |
+| `webp`    | image/webp |
 {: .image-api-table}
 
 A format value that is unsupported _SHOULD_ result in a 400 status code.
@@ -407,11 +408,11 @@ In order to support the above requirements, clients should construct the image r
 
 | Parameter | Canonical value |
 | --------- | --------------- |
-| region    | "full" if the whole image is requested, otherwise the x,y,w,h description of the region. |
-| size      | "full" if the default size is requested, otherwise the pixel dimensions w,h. |
+| region    | "full" if the whole image is requested,<br/>otherwise the `x,y,w,h` syntax. |
+| size      | "full" if the default size is requested,<br/>the `w,` syntax for images that should be scaled maintaining the aspect ratio,<br/>and the `w,h` syntax for explicit sizes that change the aspect ratio. |
 | rotation  | "!" if the image is mirrored, followed by an integer if possible, and trimming any trailing zeros in a decimal value, and a leading 0 if the value is below 1. |
-| quality   | "default" unless a quality that is different from the default quality is requested. |
-| format    | Explicit format string required; 'jpg' is preferred. |
+| quality   | "default" if the server's default quality is requested,<br/>otherwise the quality string. |
+| format    | The explicit format string is always required. |
 {: .image-api-table}
 
 When the client requests an image, the server _MAY_ add a link header to the response that indicates the canonical URI for that request:
@@ -477,25 +478,26 @@ The JSON at the top level of the response will include the following properties:
 | `width` | Required | The width in pixels of the full image content, given as an integer. |
 | `height` | Required | The height in pixels of the full image content, given as an integer. |
 | `profile` | Required | An array of profiles, indicated by either a URI or an object describing the features supported.  The first entry in the array _MUST_ be a compliance level URI, as defined below. |
-| `sizes` | Optional | A set of descriptions of the parameters to use to request complete images at different sizes that the server has available. This may be used to let a client know the sizes that are available when the server does not support requests for arbitrary sizes, or simply as a hint that requesting an image of this size may result in a faster response. |
+| `sizes` | Optional | A set of descriptions of the parameters to use to request complete images at different sizes that the server has available. This may be used to let a client know the sizes that are available when the server does not support requests for arbitrary sizes, or simply as a hint that requesting an image of this size may result in a faster response. A request constructed with the `w,h` syntax using these sizes _MUST_ be supported by the server, even if arbitrary width and height are not. |
 | `tiles` | Optional | A set of descriptions of the parameters to use to request regions of the image (tiles) that are efficient for the server to deliver. Each description gives a height and width plus a set of scale factors at which tiles of those dimensions are available. |
 | `service` | Optional | The `service` property provides a hook for additional information to be included in the image description, for example the physical size of the object depicted.  Please see the [Service Profiles][service-profiles] annex for more information. |
 {: .image-api-table}
 
-The objects in the `sizes` list have the properties in the following table.  Images requested using these sizes _SHOULD_ have a region parameter of "full" and rotation of "0". The full URL would be: `{base_url}/{identifier}/full/{width},{height}/0/default.jpg`
+The objects in the `sizes` list have the properties in the following table. Images requested using these sizes _SHOULD_ have a region parameter of "full" and rotation of "0". The full URL would be: `{base_url}/{identifier}/full/{width},{height}/0/default.jpg`
 
 | Property   | Required? | Description |
 | ---------- | --------- | ----------- |
 | `width` | Required | The width of the image to be requested. |
 | `height` | Required | The height of the image to be requested. |
-| `viewing_hint` | Optional | A string giving a hint to the intended use of the size.  It may have any value, but the following are recommended: `icon`, `thumbnail`, `small`, `medium`, `large`, `xlarge`. |
 {: .image-api-table}
 
-The objects in the `tiles` list have the properties in the following table.  The `width` and `height` should be used to fill the region parameter and the `scale_factors` to complete the size parameter of the image URL. This is described in detail in the [Implementation Notes][a-implementation-notes].
+The objects in the `tiles` list have the properties in the following table. The `width` and `height` should be used to fill the region parameter and the `scale_factors` to complete the size parameter of the image URL. This is described in detail in the [Implementation Notes][a-implementation-notes].
+
+The `width` of a tile, or the combination of `width` and `height` if `height` is specified, _MUST_ be unique among the members of the `tiles` list.
 
 | Property   | Required? | Description |
 | ---------- | --------- | ----------- |
-| `scale_factors` | Required | The set of resolution scaling factors for the image's predefined tiles, expressed as an integer by which to divide the full size of the image. For example, a scale factor of 4 indicates that the service can efficiently deliver images at 1/4 or 25% of the height and width of the full image. |
+| `scale_factors` | Required | The set of resolution scaling factors for the image's predefined tiles, expressed as an integer by which to divide the full size of the image. For example, a scale factor of 4 indicates that the service can efficiently deliver images at 1/4 or 25% of the height and width of the full image. A particular scale factor value _SHOULD_ appear only once in the `tiles` list. |
 | `width` | Required | The width of the predefined tiles to be requested. |
 | `height` | Optional | The height of the predefined tiles to be requested.  If it is not specified in the JSON, then it defaults to the same as `width`, resulting in square tiles. |
 {: .image-api-table}
@@ -527,6 +529,7 @@ The set of features that may be specified in the `supports` property of an Image
 | `rotation_arbitrary` |   Rotation of images may be requested by degrees other than multiples of 90.  |
 | `rotation_by_90s` |   Rotation of images may be requested by degrees in multiples of 90.  |
 | `size_above_full` | Size of images may be requested larger than the "full" size. |
+| `size_by_wh_listed` | Size of images given in the `sizes` field of the Image Information document may be requested using the `w,h` syntax. |
 | `size_by_forced_wh` |   Size of images may be requested in the form "!w,h".  |
 | `size_by_h` |   Size of images may be requested in the form ",h".  |
 | `size_by_pct` |   Size of images may be requested in the form "pct:n".  |
@@ -550,9 +553,9 @@ The JSON response is structured as shown in the following example. The order of 
   "width" : 6000,
   "height" : 4000,
   "sizes" : [
-    {"width" : 150, "height" : 100, "viewing_hint" : "thumbnail"},
-    {"width" : 600, "height" : 400, "viewing_hint" : "small"},
-    {"width" : 3000, "height": 2000, "viewing_hint" : "large"}
+    {"width" : 150, "height" : 100},
+    {"width" : 600, "height" : 400},
+    {"width" : 3000, "height": 2000}
   ],
   "tiles": [
     {"width" : 512, "scale_factors" : [1,2,4,8,16]}
@@ -659,12 +662,19 @@ Early sanity checking of URIs (lengths, trailing GET, invalid characters, out-of
 
 ## 11. Appendices
 
-###  A. Implementation Notes
+### A. Implementation Notes
 
   * For use cases that enable the saving of the image, it is _RECOMMENDED_ to use the HTTP `Content-Disposition` header ([RFC6266][rfc-6266]) to provide a convenient filename that distinguishes the image, based on the identifier and parameters provided.
   * This specification makes no assertion about the rights status of requested images or any other descriptive metadata, whether or not authentication has been accomplished. Please see the [IIIF Presentation API][prezi-api] for rights and other information.
   * This API does not specify how image servers fulfill requests, what quality the returned images will have for different parameters, or how parameters may affect performance.
   * Additional [Apache HTTP Server implementation notes][apache-notes] are available.
+  * When requesting sizes using the `w,` canonical syntax, if a particular height is desired, the following algorithm can be used:
+
+{% highlight python %}
+    # Calculate request width for `w,` syntax from desired height
+    request_width = image_width * desired_height / image_height
+{% endhighlight %}
+
   * When requesting image tiles, the [Region][region] and [Size][size] parameters must be calculated to take account of partial tiles along the right and lower edges for a full imagine that is not an exact multiple of the scaled tile size. The algorithm below is shown as Python code and assumes integer inputs and integer arithmetic throughout (ie. remainder discarded on division). Inputs are: size of full image content `(width,height)`, scale factor `s`, tile size `(tw,th)`, and tile coordinate `(n,m)` counting from `(0,0)` in the upper-left corner. Note that the rounding method is implementation dependent.
 
 
