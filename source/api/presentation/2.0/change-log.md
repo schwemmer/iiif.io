@@ -30,34 +30,34 @@ In addition to changes in the API, the specification documents have been changed
 
 The name for the API has been changed from "Metadata API" to "Presentation API" with version 2.0.  This was to avoid the implication that the description was semantic, bibliographic information which is not, and has never been, the intent.  This resulted in the documentation moving to a different place, along with all of the auxilliary technical files like JSON-LD context and frames.
 
-### Underscores rather than Camel Case
-
-For consistency with the Image API, the property names which used camelCase were changed to use snake_case. The properties affected are: `viewingHint` to `viewing_hint`; `viewingDirection` to `viewing_direction`; `seeAlso` to `see_also`; and `otherContent` to `other_content`.  Changing the Image API would have been significantly more disruptive, and would have resulted in more breaking changes. 
-
 ### Ranges Easier to Implement
 
 Ranges were changed to follow the top-down pattern of a list of included ranges and canvases, rather than bottom-up where they would assert which parent range they were within.  This makes it significantly easier to implement, and follows the rest of the API's patterns of listed containership.
 
 ### Page-Turning Requirements
 
-In order to support different page turning modalities, additional requirements were added to manifests that claim to be `paged`.  Notably the first canvas is to be shown by itself, and then subsequent canvases can be assumed to be left/right pairs (depending on the `viewing_direction`). An additional value of `non-paged` was added to the `viewing_hint` enumeration to assert that a particular Canvas is not part of the paging sequence.  
+In order to support different page turning modalities, additional requirements were added to manifests that claim to be `paged`.  Notably the first canvas is to be shown by itself, and then subsequent canvases can be assumed to be left/right pairs (depending on the `viewingDirection`). An additional value of `non-paged` was added to the `viewingHint` enumeration to assert that a particular Canvas is not part of the paging sequence.  
 
 ### Viewing Hints as URIs
 
 Following the features in the Image API, viewing hints are now URIs defined in the JSON-LD context document.  The JSON representation is identical and hence this is a not a breaking change, however extensions must now use URIs not plain string literals.
 
+### URI Requirements and Recommendations
+
+The recommended URI patterns were changed to be more inline with the best practice of [Cool URIs][cool-uris] and no longer have `.json` on the end.  This is not forbidden, and is still the easiest for the simplest server of just files on disk, but we should not recommend bad practice, no matter how easy.  Secondly, the recommendation for Canvas URIs being HTTP was upgraded to a requirement, as we rely on media fragments, which are only defined in terms of HTTP URIs.
+
 ## Other Changes
 
 ### Collections
 
-Section 7.6 was added to describe collections of manifests, and sub-collections.  This allows discovery in a pragmatic and simple way, that is easy to understand and follows the same structure and approach as the rest of the Presentation API.
+Section 7.6 was added to describe collections of manifests, and sub-collections.  This allows discovery in a pragmatic and simple way, that is easy to understand and follows the same structure and approach as the rest of the Presentation API.  Collections may embed other collections, in the same way that Manifests embed Sequences, but may not embed Manifests.
 
 ### Additional Fields
 
 Several new fields were added:
 
 * `logo`
-* `thumbnail`
+* `thumbnail` (recommended for Canvas, Manifest and Collection)
 * `related` (although was used in practice in 1.0)
 
 ### Services Clarified and Extended
@@ -68,13 +68,17 @@ In order to manage requests for features that are not universally applicable, bu
 
 Added and described an Open Annotation Selector object that allows specifying the parameters for an Image API URI separately.  The original use case was server side rotation of a segment image, however all of the parameters could be useful in different situations.
 
+### Image Annotation Requirements Reduced
+
+In order to reduce unnecessary repetition of information, some of the requirements for Image Annotations were dropped, including the need for height, width and format.
+
 ### Start Canvas
 
-A new relationship (`start_canvas`) was added to link to assert that it's the one to be rendered to the user first, regardless of its position in the Sequence or Range.  This is to enable viewers to skip past non-content canvases such as empty fly-leaves, the table of contents and so forth.
+A new relationship (`startCanvas`) was added to Sequences to allow specifying the URI of the canvas resource which should initially be displayed to the user.  This is to enable viewers to skip past non-content canvases such as empty fly-leaves, the table of contents, and so forth.
 
 ### Top-most Range
 
-An additional value of `top` was added to the `viewing_hint` value enumeration, to be used on a range which is the top-most level in a table of contents or other structure.
+An additional value of `top` was added to the `viewingHint` value enumeration, to be used on a range which is the top-most level in a table of contents or other structure.
 
 ### Use of HTML Clarified
 
