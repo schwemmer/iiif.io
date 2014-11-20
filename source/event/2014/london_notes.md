@@ -1,4 +1,8 @@
-
+---
+title: "Sharing Images of Global Cultural Heritage"
+layout: spec
+tags: [event ]
+---
 # IIIF 6 London
 
 Tuesday, Wednesday 21-22.10.2014 @ British Museum/British Library
