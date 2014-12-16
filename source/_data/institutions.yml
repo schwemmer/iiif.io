@@ -1,5 +1,7 @@
 - name: ARTstor
   uri: 
+- name: Bayerische Staatsbibliothek (Bavarian State Library)
+  uri: 
 - name: Biblissima
   uri: http://www.biblissima-condorcet.fr/
 - name: "Bodleian Libraries, Oxford University"
@@ -18,11 +20,15 @@
   uri: 
 - name: Johns Hopkins University
   uri: 
+- name: Klokan Technologies
+  uri: http://www.klokantech.com/ 
 - name: La Bibliothèque nationale de France
   uri:  
 - name: Nasjonalbiblioteket (National Library of Norway)
   uri: 
 - name: National Library of Denmark
+  uri:
+- name: National Library of Israel
   uri:
 - name: National Library of New Zealand
   uri:
